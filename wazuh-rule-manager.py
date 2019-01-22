@@ -18,7 +18,6 @@ if __name__ == '__main__':
     parser.add_argument('--rules', help='Path to the directory containing Wazuh XML rules', type=pathlib.Path)
     parser.add_argument('--fix', help='Fix missing fields (e.g. priority)', default=False, action='store_true')
     parser.add_argument('--out', help='Output directory or filename', type=pathlib.Path)
-    parser.add_argument('--write', help='Write what', choices=['rules', 'policy'])
     parser.add_argument('--json', help='Output policy in JSON format', default=False, action='store_true')
 
     args = parser.parse_args()
