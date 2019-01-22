@@ -11,6 +11,7 @@ try:
     from lxml import etree as etree
 except ImportError:
     import xml.etree.ElementTree as etree
+
     print('Running with built-in XML parser, some input elements (e.g. comments) will be lost')
 
 
