@@ -5,6 +5,7 @@ import argparse
 import json
 import pathlib
 
+from colors import C
 from manager import RuleManager
 from policy import Policy
 
@@ -15,18 +16,36 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--policy', help='Policy spreadsheet document file path', type=pathlib.Path)
+    parser.add_argument('--new_policy', help='Produce a new policy spreadsheet from the rules', type=pathlib.Path)
     parser.add_argument('--rules', help='Path to the directory containing Wazuh XML rules', type=pathlib.Path)
     parser.add_argument('--fix', help='Fix missing fields (e.g. priority)', default=False, action='store_true')
     parser.add_argument('--out', help='Output directory or filename', type=pathlib.Path)
     parser.add_argument('--json', help='Output policy in JSON format', default=False, action='store_true')
 
     args = parser.parse_args()
+    policy = rules = None
 
     if args.rules:
-        rule_manager = RuleManager(args.rules)
+        rules = RuleManager(args.rules)
+
+    if args.policy and args.new_policy:
+        print('ERROR: --policy and --new-policy are mutually exclusive')
+        exit(1)
+
+    if args.new_policy:
+        policy = Policy()
+        policy.from_rules(rules)
+
+        if args.fix:
+            policy.fixup()
+
+        print('Writing', C.H, args.new_policy, C.X)
+        policy.write(args.new_policy)
+        exit(0)
 
     if args.policy:
-        policy = Policy(str(args.policy))
+        policy = Policy()
+        policy.from_file(args.policy)
 
         if args.fix:
             policy.fixup()
@@ -41,9 +60,7 @@ if __name__ == '__main__':
 
     if args.rules and args.policy:
         print('Applying policy to rules')
-        rule_manager.apply_policy(policy)
+        rules.apply_policy(policy)
 
         if args.out:
-            rule_manager.write(args.out)
-
-
+            rules.write(args.out)

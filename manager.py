@@ -17,6 +17,11 @@ except ImportError:
 
 class RuleManager:
     class Collection:
+        """
+        This sub-class actually loads and parses a Wazuh XML rules file. Each such object represents
+        one rules file. Internally it's a regular XML tree represented by etree.Element objects that
+        also keeps meta-information such as XML comments (if lxml is used).
+        """
         def __init__(self, collection_file: Path):
             # store rule file base name -`rules/rules.xml` becomes `rules.xml`
             self.filename = collection_file.name
@@ -24,9 +29,11 @@ class RuleManager:
             # which crashes any regular XML parser. We wrap these roots inside an artificial
             # tag that works as single root for the whole document
             data = b'<rules>' + collection_file.read_bytes() + b'</rules>'
+            # actually load and parse the XML rules file
             self.root = etree.fromstring(data)
 
         def get_all_rules(self):
+            # each collection (.xml file) can have several <group> which in turn have many <rule> elements
             # use XPath to iterate over rules
             return self.root.findall('./group/rule')
 
@@ -34,7 +41,7 @@ class RuleManager:
         self.collections = []
 
         for collection_file in directory.glob('*.xml'):
-            print('Processing', collection_file)
+            print('Processing', C.H, collection_file, C.X)
             self.collections.append(self.Collection(collection_file))
 
     def apply_policy(self, policy: Policy):

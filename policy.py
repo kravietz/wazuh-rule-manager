@@ -2,8 +2,10 @@
 
 import re
 from collections import OrderedDict
+from pathlib import Path
 
 import openpyxl
+from openpyxl.styles import Font
 
 from colors import C
 
@@ -16,11 +18,93 @@ class Policy:
     and reflect the customary organization of Wazuh rules into separate XML files.
     """
 
-    def __init__(self, filename: str) -> None:
-        self.filename = filename
+    def __init__(self) -> None:
+        self.filename = None
         self.rules = OrderedDict()
+
+    def from_file(self, filename: Path) -> None:
+        self.filename = filename
         self._load()
-        self.fixup()
+
+    def from_rules(self, rules_manager: object) -> None:
+        """
+        Create Policy object from XML parsed rules passed as RuleManager object
+        """
+        # top-level import causes circular reference
+        from manager import RuleManager
+
+        # just a sanity check
+        if not isinstance(rules_manager, RuleManager):
+            raise ValueError('Need RuleManager instance here')
+
+        for input_collection in rules_manager.collections:
+            collection = self.Collection(input_collection.filename)
+            for input_rule in input_collection.get_all_rules():
+                # input_rule is Element('<rule>')
+                rule_contents = dict()
+                for field in input_rule.getchildren():
+                    # field is consecutive inner field, such as Element('<description>')
+                    # note there is loss of information here - we are discarding attributes completely
+                    # however in the Policy object we only really care about `level` and `id`, all the
+                    # other fields are purely informative to assist rule review and adjustment
+                    rule_contents[field.tag] = field.text
+
+                # populate fields that do not come as Element('<rule>') subfields
+                rule_contents['collection'] = collection  # created above
+                rule_contents['level'] = input_rule.get('level')  # rule attribute
+                rule_contents['id'] = input_rule.get('id')  # rule attribute
+
+                # initialize a new Rule object from the XML fields
+                new_rule = self.Rule(rule_contents)
+                self.rules[new_rule.id] = new_rule
+
+    def get_rules_by_collection(self, collection: object) -> list:
+        """
+        Return all rules in specified Collection sorted by id (ascending)
+        """
+        ret = []
+        for rule in self.rules.values():
+            if rule.collection == collection:
+                ret.append(rule)
+        return sorted(ret, key=lambda k: k.id)
+
+    def write(self, output_file: Path) -> None:
+        """
+        Writes the policy into an XLSX spreadsheet
+        """
+        workbook = openpyxl.Workbook(write_only=True)
+        for collection in self.get_collections(sort=True):
+            worksheet = workbook.create_sheet(title=collection.filename, index=collection.priority)
+            header_row = True
+            header_fields = []  # for code analysis
+            for rule in self.get_rules_by_collection(collection):
+
+                if header_row:
+                    header_fields = rule.as_header()
+                    worksheet.append(header_fields)
+                    header_row = False
+
+                # do some purely visual field tossing - put level and id into the front
+                row = []
+                for field_name in header_fields:
+                    # this is not a rule field, this is internal data
+                    if field_name == 'collection':
+                        continue
+                    # manually create duplicate of `level` for visual comparison in the spreadsheet
+                    elif field_name == 'prev_level':
+                        row.append(rule.__dict__['level'])
+                    else:
+                        # some cells are empty in given column, this is not a problem
+                        row.append(rule.__dict__.get(field_name))
+
+                # fill in the complete row into the worksheet
+                worksheet.append(row)
+
+            # highlight the header row
+            worksheet.row_dimensions[1].font = Font(bold=True)
+
+        # finally save the whole workbook file
+        workbook.save(str(output_file))
 
     class Collection:
         """
@@ -28,8 +112,8 @@ class Policy:
         name (`wazuh`) and priority (`16`) which are later used in writing the rules back to disk.
         """
 
-        def __init__(self, filename: str):
-            self.filename = filename
+        def __init__(self, filename: Path):
+            self.filename = str(filename)
 
             # generate collection name out of the filename
             if re.match(r'^\d+-[\w-]+\.xml$', filename):
@@ -49,7 +133,11 @@ class Policy:
         """
 
         def __init__(self, kv: dict):
-            core_fields = {'id', 'collection'}
+            # only to stop code inspection alerts about non-existent field references
+            self.id = None
+            self.level = 0
+
+            core_fields = {'id', 'collection', 'level'}
             if not core_fields.issubset(kv.keys()):
                 raise ValueError('ERROR: rule without mandatory fields', core_fields, ', rule=', kv)
 
@@ -61,14 +149,28 @@ class Policy:
                     continue
                 self.__dict__[k] = v
 
+        def as_header(self):
+            fields = self.__dict__.copy()
+            ret = ['id', 'prev_level', 'level']
+            del fields['id']
+            del fields['level']
+            ret += fields.keys()
+            return ret
+
         def __str__(self):
             return str(self.__dict__)
 
-    def get_collections(self):
+    def get_collections(self, sort: bool = False) -> list:
+        """
+        Return a list of all Collections sorted by their priority (ascending)
+        """
         ret = set()
         for rule in self.rules.values():
             ret.add(rule.collection)
-        return ret
+        if sort:
+            return sorted(ret, key=lambda k: k.priority)
+        else:
+            return ret
 
     def fixup(self) -> None:
         priorities = []
@@ -80,8 +182,11 @@ class Policy:
             if not hasattr(collection, 'priority'):
                 last_priority += 100
                 collection.priority = last_priority
-                print(C.Y, 'WARNING:', C.X, 'Collection', collection, 'had no priority, assigning first available',
-                      last_priority)
+                new_filename = '{:04d}-{}_rules.xml'.format(collection.priority, collection.name)
+                print(C.Y, 'WARNING:', C.X, 'Collection', C.H, collection, C.X,
+                      'had no priority, assigning first available',
+                      last_priority, 'and renaming to', C.H, new_filename, C.X)
+                collection.filename = new_filename
 
     def num_collections(self) -> int:
         return len(self.get_collections())
@@ -100,7 +205,7 @@ class Policy:
 
     def _load(self) -> None:
 
-        policy_workbook = openpyxl.load_workbook(self.filename, read_only=True)
+        policy_workbook = openpyxl.load_workbook(str(self.filename), read_only=True)
 
         for collection_filename in policy_workbook.sheetnames:
 
