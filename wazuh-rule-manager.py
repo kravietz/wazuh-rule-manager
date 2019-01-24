@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import difflib
 import json
 import pathlib
+import sys
+from filecmp import dircmp
 
 from colors import C
 from manager import RuleManager
@@ -46,6 +49,7 @@ if __name__ == '__main__':
 
         print('Writing', C.H, args.new_policy, C.X)
         policy.write(args.new_policy)
+
         exit(0)
 
     if args.policy:
@@ -76,3 +80,17 @@ if __name__ == '__main__':
 
         if args.out:
             rules.write(args.out)
+
+            if args.diff:
+                print('Comparing directories...')
+                dc = dircmp(str(args.rules), str(args.out))
+                for name in dc.diff_files:
+                    left = args.rules / name
+                    right = args.out / name
+                    diff = difflib.unified_diff(
+                        left.open(mode='rt').readlines(),
+                        right.open(mode='rt').readlines(),
+                        fromfile=str(left),
+                        tofile=str(right)
+                    )
+                    sys.stdout.writelines(diff)
