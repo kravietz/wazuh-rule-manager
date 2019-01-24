@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import json
+import pathlib
 import re
 from collections import OrderedDict
 from pathlib import Path
@@ -10,6 +11,13 @@ from openpyxl.styles import Font
 from colors import C
 
 __author__ = 'Pawel Krawczyk'
+
+
+class PolicyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, pathlib.Path):
+            return obj.name
+        return obj.__dict__
 
 
 class Policy:
