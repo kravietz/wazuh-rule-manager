@@ -76,9 +76,9 @@ class RuleManager:
                 new_level = str(rule_policy.level)
                 old_level = rule_element.get('level')
                 print('Rule', C.H, rule_id, C.X, old_level, '⇢', new_level, end=' ')
-                if new_level == old_level:
+                if int(new_level) == int(old_level):
                     print('→', C.B, 'NO CHANGE', C.X)
-                elif new_level > old_level:
+                elif int(new_level) > int(old_level):
                     print('↗', C.G, 'UPGRADE', C.X)
                     rule_element.set('level', new_level)
                 else:
