@@ -26,6 +26,10 @@ if __name__ == '__main__':
     policy = rules = None
 
     if args.rules:
+        if not args.rules.exists():
+            print(C.R, 'ERROR:', C.X, 'Rules directory', args.rules, 'does not exist')
+            exit(1)
+
         rules = RuleManager(args.rules)
         print('Loaded', len(list(rules.get_all_rules())), 'rules from', len(rules.get_collections()), 'collections')
 
