@@ -47,8 +47,14 @@ class RuleManager:
             print('Processing', C.H, collection_file, C.X)
             self.collections.append(self.Collection(collection_file))
 
+    def num_collections(self) -> int:
+        return len(self.get_collections())
+
     def get_collections(self) -> list:
         return self.collections
+
+    def num_rules(self) -> int:
+        return len(list(self.get_all_rules()))
 
     def get_all_rules(self):
         for collection in self.collections:

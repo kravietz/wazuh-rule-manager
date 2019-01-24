@@ -11,7 +11,6 @@ from policy import Policy, PolicyEncoder
 
 __author__ = 'Pawel Krawczyk'
 
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -60,6 +59,16 @@ if __name__ == '__main__':
     if args.rules and args.policy:
         print('Applying policy to rules')
         rules.apply_policy(policy)
+
+        if rules.num_collections() != policy.num_collections():
+            print(C.Y, 'WARNING:', C.X,
+                  'policy file has {} collections but XML files have {} collections'.format(policy.num_collections(),
+                                                                                            rules.num_collections()))
+
+        if rules.num_rules() != policy.num_rules():
+            print(C.Y, 'WARNING:', C.X,
+                  'policy file has {} collections but XML file have {} rules'.format(policy.num_rules(),
+                                                                                     rules.num_rules()))
 
         if args.out:
             rules.write(args.out)
