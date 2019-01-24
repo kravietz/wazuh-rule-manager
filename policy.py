@@ -178,7 +178,7 @@ class Policy:
         if sort:
             return sorted(ret, key=lambda k: k.priority)
         else:
-            return ret
+            return list(ret)
 
     def fixup(self) -> None:
         priorities = []
