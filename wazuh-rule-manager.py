@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     if args.rules:
         rules = RuleManager(args.rules)
+        print('Loaded', len(list(rules.get_all_rules())), 'rules from', len(rules.get_collections()), 'collections')
 
     if args.policy and args.new_policy:
         print('ERROR: --policy and --new-policy are mutually exclusive')

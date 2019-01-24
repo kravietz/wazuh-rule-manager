@@ -33,6 +33,9 @@ class RuleManager:
             self.root = etree.fromstring(data)
 
         def get_all_rules(self):
+            """
+            Get all rules for this collection
+            """
             # each collection (.xml file) can have several <group> which in turn have many <rule> elements
             # use XPath to iterate over rules
             return self.root.findall('./group/rule')
@@ -43,6 +46,14 @@ class RuleManager:
         for collection_file in directory.glob('*.xml'):
             print('Processing', C.H, collection_file, C.X)
             self.collections.append(self.Collection(collection_file))
+
+    def get_collections(self) -> list:
+        return self.collections
+
+    def get_all_rules(self):
+        for collection in self.collections:
+            for rule in collection.get_all_rules():
+                yield rule
 
     def apply_policy(self, policy: Policy):
         """
