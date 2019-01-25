@@ -63,7 +63,7 @@ class RuleManager:
 
     def apply_policy(self, policy: Policy):
         """
-        Based on input from policy spreadsheet patch rules' levels.
+        Based on input from policy spreadsheet, patch rules' levels.
         """
         for collection in self.collections:
             for rule_element in collection.get_all_rules():
@@ -73,17 +73,23 @@ class RuleManager:
                     # this rule does not have policy entry
                     print(C.Y, 'WARNING:', C.X, 'rule', rule_id, 'does not have policy entry defined')
                     continue
-                new_level = str(rule_policy.level)
-                old_level = rule_element.get('level')
+                # levels in policy are ints
+                new_level = rule_policy.level
+                # XML returns str
+                old_level = int(rule_element.get('level'))
+
+                # this is where we actually patch the rule
+                # need to convert level back to str
+                rule_element.set('level', str(new_level))
+
+                # now levels from both sources are ints, which we need for comparison
                 print('Rule', C.H, rule_id, C.X, old_level, '⇢', new_level, end=' ')
-                if int(new_level) == int(old_level):
+                if new_level == old_level:
                     print('→', C.B, 'NO CHANGE', C.X)
-                elif int(new_level) > int(old_level):
+                elif new_level > old_level:
                     print('↗', C.G, 'UPGRADE', C.X)
-                    rule_element.set('level', new_level)
                 else:
                     print('↘ ', C.Y, 'DOWNGRADE', C.X)
-                    rule_element.set('level', new_level)
 
     def write(self, directory: Path):
         """
