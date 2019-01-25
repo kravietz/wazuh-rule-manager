@@ -239,6 +239,10 @@ class Policy:
                 for cell in row:
 
                     if in_heading_row:
+                        # having duplicate id or level columns will wreak havoc in rule adjustment so detect early
+                        if cell.value in ('id', 'level') and cell.value in rule_collection_headers:
+                            raise ValueError(
+                                'Duplicate column header {} in worksheet {}'.format(cell.value, collection_filename))
                         rule_collection_headers.append(cell.value)
                         continue
 
