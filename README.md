@@ -10,18 +10,35 @@ careful. Typical workflow:
 
 Other features:
 
-* Upgrade and merge rules from GitHub **✋ not implemented**
-* Audit XML rules against the policy  **✋ not implemented**
+* Upgrade and merge rules from GitHub
+* Audit XML rules against the policy
 * Fix some missing fields and inconsistencies
 * Dump the policy into JSON
-* Dump the policy into YAML **✋ not implemented**
+* Dump the policy into YAML **✋ not implemented yet**
 
 ## Usage
 
-Assuming input rules are in `rules` directory and output rules are to be written into `out_rules`:
+Assuming input rules are in `rules` directory and output rules are to be written into `out_rules` you may want to 
+run the following commands:
+
+* Analyze your existing rules and check for possible inconsistencies
+
 
     python3 wazuh-rule-manager.py --rules rules
     
-    python3 wazuh-rule-manager.py --rules rules --policy policy.xlsx
+* Generate new policy from existing rules, fixing inconsistencies
+
+
+    python3 wazuh-rule-manager.py  --rules rules --new_policy new_policy.xlsx --fix
     
-    python3 wazuh-rule-manager.py --rules rules --policy policy.xlsx --out out_rules
+* Manually review the `new_policy.xlsx` file and adjust the `level` fields and save to `adjusted_policy.xlsx`.
+  Then check what would get changed in actual XML rules in dry run mode:
+ 
+    
+    python3 wazuh-rule-manager.py --rules rules --policy adjusted_policy.xlsx
+    
+* Generate a new adjusted rule set and write it into `out_rules` directory, and display a diff between
+    existing and adjusted rules afterwards: 
+    
+    
+    python3 wazuh-rule-manager.py --rules rules --policy adjusted_policy.xlsx --out out_rules --diff
