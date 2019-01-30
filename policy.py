@@ -166,7 +166,7 @@ class Policy:
             return ret
 
         def __str__(self):
-            return str(self.__dict__)
+            return str(self.id)
 
     def get_collections(self, sort: bool = False) -> list:
         """
@@ -204,7 +204,7 @@ class Policy:
 
     def get_rule_by_id(self, rule_id: int) -> Rule:
         try:
-            return self.rules.get(int(rule_id))
+            return self.rules[int(rule_id)]
         except (KeyError, ValueError):
             try:
                 return self.rules[rule_id]

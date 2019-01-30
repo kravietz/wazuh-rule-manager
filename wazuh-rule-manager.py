@@ -65,6 +65,7 @@ if __name__ == '__main__':
             print(json.dumps(policy, indent=4, sort_keys=True, cls=PolicyEncoder))
 
     if args.rules and args.policy:
+
         print('Applying policy to rules')
         rules.apply_policy(policy)
 

@@ -22,6 +22,7 @@ class RuleManager:
         one rules file. Internally it's a regular XML tree represented by etree.Element objects that
         also keeps meta-information such as XML comments (if lxml is used).
         """
+
         def __init__(self, collection_file: Path):
             # store rule file base name -`rules/rules.xml` becomes `rules.xml`
             self.filename = collection_file.name
@@ -43,6 +44,11 @@ class RuleManager:
     def __init__(self, directory: Path):
         self.collections = []
 
+        # this structure is used to automatically map levels for rules that
+        # do not have this mapping explicitly declared in policy
+        # for example, always map level 12 -> 8
+        self.level_map = {}
+
         for collection_file in directory.glob('*.xml'):
             print('Processing', C.H, collection_file, C.X)
             self.collections.append(self.Collection(collection_file))
@@ -61,22 +67,30 @@ class RuleManager:
             for rule in collection.get_all_rules():
                 yield rule
 
-    def apply_policy(self, policy: Policy):
+    def apply_policy(self, policy: Policy, old_max_level: int = 15, new_max_level: int = 10):
         """
         Based on input from policy spreadsheet, patch rules' levels.
         """
         for collection in self.collections:
             for rule_element in collection.get_all_rules():
                 rule_id = rule_element.get('id')
-                rule_policy = policy.get_rule_by_id(rule_id)
-                if not rule_policy:
-                    # this rule does not have policy entry
-                    print(C.Y, 'WARNING:', C.X, 'rule', rule_id, 'does not have policy entry defined')
-                    continue
-                # levels in policy are ints
-                new_level = rule_policy.level
-                # XML returns str
+
+                # XML returns str but we need level to be int
                 old_level = int(rule_element.get('level'))
+
+                # find a policy entry for this rule id
+                rule_policy = policy.get_rule_by_id(rule_id)
+
+                # determine new level to apply
+                if rule_policy:
+                    # either from rule policy entry for this id
+                    # levels in policy are ints
+                    new_level = int(rule_policy.level)
+                else:
+                    # or, no policy exists, then by mapping the default set
+                    new_level = round((old_level - 1) / (old_max_level - 1) * (new_max_level - 1) + 1)
+                    print(C.Y, 'WARNING:', C.X, 'rule', rule_id,
+                          'does not have policy entry, applying computed mapping', new_level)
 
                 # this is where we actually patch the rule
                 # need to convert level back to str
