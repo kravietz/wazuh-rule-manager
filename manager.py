@@ -67,7 +67,7 @@ class RuleManager:
             for rule in collection.get_all_rules():
                 yield rule
 
-    def apply_policy(self, policy: Policy, old_max_level: int = 15, new_max_level: int = 10):
+    def apply_policy(self, policy: Policy, old_max_level: int = 15, new_max_level: int = 10, overwrite: bool = False):
         """
         Based on input from policy spreadsheet, patch rules' levels.
         """
@@ -95,6 +95,9 @@ class RuleManager:
                 # this is where we actually patch the rule
                 # need to convert level back to str
                 rule_element.set('level', str(new_level))
+
+                if overwrite:
+                    rule_element.set('overwrite', 'yes')
 
                 # now levels from both sources are ints, which we need for comparison
                 print('Rule', C.H, rule_id, C.X, old_level, '⇢', new_level, end=' ')

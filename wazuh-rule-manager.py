@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -22,6 +22,8 @@ if __name__ == '__main__':
     parser.add_argument('--rules', help='Path to the directory containing Wazuh XML rules', type=pathlib.Path)
     parser.add_argument('--fix', help='Fix missing fields (e.g. priority)', default=False, action='store_true')
     parser.add_argument('--out', help='Output directory or filename', type=pathlib.Path)
+    parser.add_argument('--overwrite', help='Add `overwrite` attribute to newly generated rules',
+                        action='store_true', default=False)
     parser.add_argument('--diff', help='Show diff between old and adjusted rules', default=False, action='store_true')
     parser.add_argument('--json', help='Output policy in JSON format', default=False, action='store_true')
 
@@ -67,7 +69,7 @@ if __name__ == '__main__':
     if args.rules and args.policy:
 
         print('Applying policy to rules')
-        rules.apply_policy(policy)
+        rules.apply_policy(policy, overwrite=args.overwrite)
 
         if rules.num_collections() != policy.num_collections():
             print(C.Y, 'WARNING:', C.X,
