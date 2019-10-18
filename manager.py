@@ -68,7 +68,7 @@ class RuleManager:
             for rule in collection.get_all_rules():
                 yield rule
 
-    def apply_policy(self, policy: Policy, old_max_level: int = 15, new_max_level: int = 10, overwrite: bool = False):
+    def apply_policy(self, policy: Policy, overwrite: bool = False):
         """
         Based on input from policy spreadsheet, patch rules' levels.
         """
@@ -89,7 +89,7 @@ class RuleManager:
                     new_level = int(rule_policy.level)
                 else:
                     # or, no policy exists, then by mapping the default set
-                    new_level = round((old_level - 1) / (old_max_level - 1) * (new_max_level - 1) + 1)
+                    new_level = policy.map_level(old_level)
                     print(C.Y, 'WARNING:', C.X, 'rule', rule_id,
                           'does not have policy entry, applying computed mapping', new_level)
 

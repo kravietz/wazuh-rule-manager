@@ -26,13 +26,22 @@ class Policy:
     and reflect the customary organization of Wazuh rules into separate XML files.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, map_levels_max: int = 15) -> None:
         self.filename = None
         self.rules = OrderedDict()
+        self.map_levels_max = map_levels_max
+        self.old_max_level = 15
 
     def from_file(self, filename: Path) -> None:
         self.filename = filename
         self._load()
+
+    def map_level(self, old_level: int):
+        """
+        Compute a new mapped level given the old range max and new range max values. Used to compress
+        alert level ranges: for example, when your org uses ranges 0-10 but Wazuh uses 0-15 by default.
+        """
+        return round((old_level - 1) / (self.old_max_level - 1) * (self.map_levels_max - 1) + 1)
 
     def from_rules(self, rules_manager: object) -> None:
         """

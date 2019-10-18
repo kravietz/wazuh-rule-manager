@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
-
 import argparse
 import difflib
 import json
 import pathlib
+import sys
 from filecmp import dircmp
 
 from colors import C
@@ -19,7 +18,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--policy', help='Policy spreadsheet document file path', type=pathlib.Path)
-    parser.add_argument('--new_policy', help='Produce a new policy spreadsheet from the rules', type=pathlib.Path)
+    parser.add_argument('--gen-policy', dest='new_policy', help='Produce a new policy spreadsheet from the rules',
+                        type=pathlib.Path)
     parser.add_argument('--rules', help='Path to the directory containing Wazuh XML rules', type=pathlib.Path)
     parser.add_argument('--fix', help='Fix missing fields (e.g. priority)', default=False, action='store_true')
     parser.add_argument('--out', help='Output directory or filename', type=pathlib.Path)
@@ -28,6 +28,9 @@ if __name__ == '__main__':
     parser.add_argument('--diff', help='Show diff between old and adjusted rules', default=False, action='store_true')
     parser.add_argument('--json', help='Output policy in JSON format', default=False, action='store_true')
     parser.add_argument('--single', help='Output all rules in a single XML file', default=False, action='store_true')
+    parser.add_argument('--map-levels', dest='map_levels', type=int,
+                        help='Automatically compress levels range from default 0-10 to 0-N. '
+                             'Only applies to rules not covered by explicit policy')
 
     args = parser.parse_args()
     policy = rules = None
@@ -45,7 +48,11 @@ if __name__ == '__main__':
         exit(1)
 
     if args.new_policy:
-        policy = Policy()
+        if args.map_levels:
+            policy = Policy(map_levels_max=args.map_levels)
+        else:
+            policy = Policy()
+
         policy.from_rules(rules)
 
         if args.fix:
@@ -99,3 +106,9 @@ if __name__ == '__main__':
                         tofile=str(right)
                     )
                     sys.stdout.writelines(diff)
+
+    if args.map_levels:
+        print('Applied the following level mapping:')
+        p = Policy(map_levels_max=args.map_levels)
+        for n in range(16):
+            print(n, '⇢', p.map_level(n))
