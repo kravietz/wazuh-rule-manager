@@ -121,4 +121,4 @@ class RuleManager:
             with p.open('wb') as out_file:
                 print('Writing', p)
                 for elem in collection.root.getchildren():
-                    out_file.write(etree.tostring(elem).replace('&gt;', '>'))
+                    out_file.write(etree.tostring(elem).replace(b'&gt;', b'>'))
