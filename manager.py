@@ -108,17 +108,31 @@ class RuleManager:
                 else:
                     print('↘ ', C.Y, 'DOWNGRADE', C.X)
 
-    def write(self, directory: Path):
-        """
-        Write modified Wazuh rules into XML files in the specific directory. Individual file
-        names were previously stored on load in the Collection objects.
-        """
+    def _write_file(self, file: Path):
+        with file.open('wb') as out_file:
+            print('Writing rules to file', file)
+            for collection in self.collections:
+                print('Writing collection', collection.filename)
+                for elem in collection.root.getchildren():
+                    out_file.write(etree.tostring(elem).replace(b'&gt;', b'>'))
+
+    def _write_dir(self, directory: Path):
         if not directory.is_dir():
             raise ValueError('The place to write rules must be a writable directory:', directory)
 
         for collection in self.collections:
             p = directory / Path(collection.filename)
             with p.open('wb') as out_file:
-                print('Writing', p)
+                print('Writing file', p)
                 for elem in collection.root.getchildren():
                     out_file.write(etree.tostring(elem).replace(b'&gt;', b'>'))
+
+    def write(self, output_where: Path, single_file: bool = False):
+        """
+        Write modified Wazuh rules into XML files in the specific directory. Individual file
+        names were previously stored on load in the Collection objects.
+        """
+        if single_file:
+            self._write_file(output_where)
+        else:
+            self._write_dir(output_where)

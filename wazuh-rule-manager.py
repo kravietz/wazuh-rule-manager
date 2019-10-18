@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
+
 import argparse
 import difflib
 import json
 import pathlib
-import sys
 from filecmp import dircmp
 
 from colors import C
@@ -26,6 +27,7 @@ if __name__ == '__main__':
                         action='store_true', default=False)
     parser.add_argument('--diff', help='Show diff between old and adjusted rules', default=False, action='store_true')
     parser.add_argument('--json', help='Output policy in JSON format', default=False, action='store_true')
+    parser.add_argument('--single', help='Output all rules in a single XML file', default=False, action='store_true')
 
     args = parser.parse_args()
     policy = rules = None
@@ -82,7 +84,7 @@ if __name__ == '__main__':
                                                                                      rules.num_rules()))
 
         if args.out:
-            rules.write(args.out)
+            rules.write(args.out, args.single)
 
             if args.diff:
                 print('Comparing directories...')
