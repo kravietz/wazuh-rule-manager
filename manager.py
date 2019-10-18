@@ -24,7 +24,7 @@ class RuleManager:
         """
 
         def __init__(self, collection_file: Path):
-            self._parser = etree.XMLParser(recover=True)
+            self._parser = etree.XMLParser(recover=True, remove_comments=True)
             # store rule file base name -`rules/rules.xml` becomes `rules.xml`
             self.filename = collection_file.name
             # Hack to work around Wazuh using pseudo-XML file syntax with many root tags
