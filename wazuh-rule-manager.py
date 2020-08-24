@@ -29,7 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--json', help='Output policy in JSON format', default=False, action='store_true')
     parser.add_argument('--single', help='Output all rules in a single XML file', default=False, action='store_true')
     parser.add_argument('--map-levels', dest='map_levels', type=int,
-                        help='Automatically compress levels range from default 0-10 to 0-N. '
+                        help='Automatically compress levels range from default 0-15 to 0-N. '
                              'Only applies to rules not covered by explicit policy')
 
     args = parser.parse_args()
