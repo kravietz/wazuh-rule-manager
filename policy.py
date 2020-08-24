@@ -26,7 +26,7 @@ class Policy:
     and reflect the customary organization of Wazuh rules into separate XML files.
     """
 
-    def __init__(self, map_levels_max: int = 15) -> None:
+    def __init__(self, map_levels_max: int = 10) -> None:
         self.filename = None
         self.rules = OrderedDict()
         self.map_levels_max = map_levels_max

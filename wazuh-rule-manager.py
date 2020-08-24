@@ -47,6 +47,11 @@ if __name__ == '__main__':
         print('ERROR: --policy and --new-policy are mutually exclusive')
         exit(1)
 
+    if args.map_levels:
+        policy = Policy(map_levels_max=args.map_levels)
+    else:
+        policy = Policy()
+
     if args.new_policy:
         if args.map_levels:
             policy = Policy(map_levels_max=args.map_levels)
@@ -64,7 +69,6 @@ if __name__ == '__main__':
         exit(0)
 
     if args.policy:
-        policy = Policy()
         policy.from_file(args.policy)
 
         if args.fix:
